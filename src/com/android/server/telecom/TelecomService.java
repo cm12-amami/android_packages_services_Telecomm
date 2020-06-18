@@ -16,6 +16,8 @@
 
 package com.android.server.telecom;
 
+import static android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE;
+
 import android.Manifest;
 import android.annotation.SdkConstant;
 import android.app.AppOpsManager;
@@ -266,6 +268,22 @@ public class TelecomService extends Service {
 
         @Override
         public List<PhoneAccountHandle> getPhoneAccountsForPackage(String packageName) {
+            //TODO: Deprecate this in S
+            try {
+                enforceCallingPackage(packageName);
+            } catch (SecurityException se1) {
+                EventLog.writeEvent(0x534e4554, "153995334", Binder.getCallingUid(),
+                        "getPhoneAccountsForPackage: invalid calling package");
+                throw se1;
+            }
+
+            try {
+                enforcePermission(READ_PRIVILEGED_PHONE_STATE);
+            } catch (SecurityException se2) {
+                EventLog.writeEvent(0x534e4554, "153995334", Binder.getCallingUid(),
+                        "getPhoneAccountsForPackage: no permission");
+                throw se2;
+            }
             try {
                 return filterForAccountsVisibleToCaller(
                         mPhoneAccountRegistrar.getPhoneAccountsForPackage(packageName));
